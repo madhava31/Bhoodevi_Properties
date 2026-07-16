@@ -30,9 +30,6 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 Navigate to `/admin` in the browser to access the admin login.
 
-- **Admin ID:** `bhoodevi_admin`
-- **Password:** `Bhoodevi@2026`
-
 ## Project Structure
 
 ```
