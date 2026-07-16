@@ -13,7 +13,7 @@ const statusStyles = {
   Sold: "bg-rose-50 text-rose-700 border-rose-200",
 };
 
-export default function PropertyCard({ property, index = 0 }) {
+export default function PropertyCard({ property, index = 0, compactImage = false }) {
   const ref = useRef(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [glint, setGlint] = useState({ x: 50, y: 50 });
@@ -49,7 +49,7 @@ export default function PropertyCard({ property, index = 0 }) {
         className="group preserve-3d relative rounded-2xl overflow-hidden border border-border bg-card transition-transform duration-200 ease-out hover:shadow-2xl hover:shadow-primary/10"
       >
         {/* Image */}
-        <div className="relative aspect-[4/5] overflow-hidden">
+        <div className={cn("relative overflow-hidden", compactImage ? "aspect-[16/10]" : "aspect-[4/5]")}>
           <img
             src={img}
             alt={property.title}

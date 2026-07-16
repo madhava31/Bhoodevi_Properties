@@ -2,17 +2,24 @@ const db = globalThis.__BHOODEVI_DB__ || { auth:{ isAuthenticated: async()=>fals
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Plus, Edit, Trash2, MapPin, Building, Activity, FileText, CheckCircle2, MessageSquare, ArrowLeft, ExternalLink, ShieldCheck, LogOut } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Building, Activity, FileText, CheckCircle2, MessageSquare, ExternalLink, ShieldCheck, LogOut, Clock3, CircleX } from "lucide-react";
 import { formatPrice } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { clearAdminSession } from "@/pages/AdminLogin";
 
-const statusStyles = {
-  Available: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30",
-  Booked: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30",
-  Sold: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30",
-};
+const statusOptions = [
+  { value: "Available", label: "Active", icon: CheckCircle2, activeClass: "border-emerald-300 bg-emerald-100 text-emerald-800 shadow-[0_3px_0_rgb(110,231,183)]" },
+  { value: "Booked", label: "Booked", icon: Clock3, activeClass: "border-amber-300 bg-amber-100 text-amber-800 shadow-[0_3px_0_rgb(253,230,138)]" },
+  { value: "Sold", label: "Sold", icon: CircleX, activeClass: "border-rose-300 bg-rose-100 text-rose-800 shadow-[0_3px_0_rgb(254,205,211)]" },
+];
+
+const statusOrder = { Available: 0, Booked: 1, Sold: 2 };
+
+const sortPropertiesByStatus = (properties) => [...properties].sort((a, b) => {
+  const statusDifference = (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3);
+  if (statusDifference !== 0) return statusDifference;
+  return new Date(b.created_date || 0) - new Date(a.created_date || 0);
+});
 
 export default function AdminDashboard() {
   const [properties, setProperties] = useState([]);
@@ -28,7 +35,7 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       const propList = await db.entities.Property.list("-created_date", 100);
-      setProperties(propList);
+      setProperties(sortPropertiesByStatus(propList));
       
       const inqList = await db.entities.Inquiry.list();
       setInquiries(inqList || []);
@@ -47,6 +54,20 @@ export default function AdminDashboard() {
       } catch (err) {
         alert("Failed to delete property. Please try again.");
       }
+    }
+  };
+
+  const handleStatusChange = async (id, status) => {
+    const previousProperties = properties;
+    setProperties((current) => sortPropertiesByStatus(current.map((property) => (
+      property.id === id ? { ...property, status } : property
+    ))));
+
+    try {
+      await db.entities.Property.update(id, { status });
+    } catch (err) {
+      setProperties(previousProperties);
+      alert("Failed to update the listing status. Please try again.");
     }
   };
 
@@ -169,9 +190,34 @@ export default function AdminDashboard() {
                               )}
                             </td>
                             <td className="px-6 py-4">
-                              <span className={cn("inline-flex text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full border", statusStyles[p.status] || statusStyles.Available)}>
-                                {p.status}
-                              </span>
+                              <div
+                                className="inline-flex rounded-lg border border-border bg-muted/40 p-1"
+                                role="group"
+                                aria-label={`Listing status for ${p.title}`}
+                              >
+                                {statusOptions.map(({ value, label, icon: Icon, activeClass }) => {
+                                  const isActive = (p.status || "Available") === value;
+                                  return (
+                                    <button
+                                      key={value}
+                                      type="button"
+                                      onClick={() => handleStatusChange(p.id, value)}
+                                      aria-pressed={isActive}
+                                      title={`Mark as ${label}`}
+                                      className={cn(
+                                        "inline-flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-semibold uppercase tracking-wide transition-all duration-200",
+                                        "hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 active:shadow-none",
+                                        isActive
+                                          ? activeClass
+                                          : "border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-background hover:text-foreground"
+                                      )}
+                                    >
+                                      <Icon className="h-3 w-3" />
+                                      {label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </td>
                             <td className="px-6 py-4 text-right">
                               <div className="flex items-center justify-end gap-2">

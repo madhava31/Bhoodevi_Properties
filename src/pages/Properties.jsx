@@ -11,6 +11,7 @@ import { Search, SlidersHorizontal, LayoutGrid, List, Map as MapIcon, X, MapPin 
 import FilterSelect from "@/components/FilterSelect";
 
 const PAGE_SIZE = 9;
+const statusOrder = { Available: 0, Booked: 1, Sold: 2 };
 
 export default function Properties() {
   const [params, setParams] = useSearchParams();
@@ -46,9 +47,13 @@ export default function Properties() {
       }
       return true;
     });
-    if (sort === "price-asc") r = [...r].sort((a, b) => a.price - b.price);
-    if (sort === "price-desc") r = [...r].sort((a, b) => b.price - a.price);
-    return r;
+    return [...r].sort((a, b) => {
+      const statusDifference = (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3);
+      if (statusDifference !== 0) return statusDifference;
+      if (sort === "price-asc") return a.price - b.price;
+      if (sort === "price-desc") return b.price - a.price;
+      return new Date(b.created_date || 0) - new Date(a.created_date || 0);
+    });
   }, [all, type, query, maxPrice, orr, sort]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -199,7 +204,7 @@ export default function Properties() {
               <AnimatePresence>
                 {paged.map((p, i) => (
                   <motion.div key={p.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    <PropertyCard property={p} index={i} />
+                    <PropertyCard property={p} index={i} compactImage />
                   </motion.div>
                 ))}
               </AnimatePresence>
