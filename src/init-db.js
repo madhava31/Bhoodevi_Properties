@@ -236,7 +236,7 @@ const filterData = (data, criteria) => {
   });
 };
 
-// Initialize the global Base44 mock DB structure
+// Initialize the global mock DB structure
 globalThis.__B44_DB__ = {
   __isMock: true,
   auth: {
