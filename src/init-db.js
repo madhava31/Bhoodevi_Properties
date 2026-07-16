@@ -237,7 +237,7 @@ const filterData = (data, criteria) => {
 };
 
 // Initialize the global mock DB structure
-globalThis.__B44_DB__ = {
+globalThis.__BHOODEVI_DB__ = {
   __isMock: true,
   auth: {
     isAuthenticated: async () => true,
@@ -350,17 +350,4 @@ globalThis.__B44_DB__ = {
       UploadFile: async () => ({ file_url: '/images/7a0e880ec_generated_a61bcacb.png' })
     }
   }
-};
-
-// Global mock for Axios client used during app settings verification
-globalThis.createAxiosClient = (options) => {
-  return {
-    get: async (url) => {
-      console.log("Mock Axios Client GET:", url);
-      return {
-        id: "mock-app-id",
-        public_settings: {}
-      };
-    }
-  };
 };
