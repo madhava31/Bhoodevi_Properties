@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Sand & Silk palette */
+    --background: 40 33% 97%;          /* Bone Ivory #FDFBF7 */
+    --foreground: 20 14% 10%;          /* Slate Charcoal */
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 10%;
+    --primary: 174 76% 26%;            /* Deep Teal #0F766E */
+    --primary-foreground: 40 33% 97%;
+    --secondary: 28 37% 33%;           /* Burnished Earth #785135 */
+    --secondary-foreground: 40 33% 97%;
+    --accent: 43 74% 38%;              /* Metallic Gold #B8860B */
+    --accent-foreground: 20 14% 10%;
+    --muted: 40 23% 93%;
+    --muted-foreground: 28 10% 40%;
+    --border: 40 23% 90%;
+    --input: 40 23% 90%;
+    --ring: 174 76% 26%;
+    --chart-1: 174 76% 26%;
+    --chart-2: 28 37% 33%;
+    --chart-3: 43 74% 38%;
+    --chart-4: 160 30% 50%;
+    --chart-5: 27 60% 55%;
+    --radius: 0.75rem;
+    --font-heading: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .dark {
+    --background: 180 20% 8%;
+    --foreground: 40 33% 97%;
+    --card: 180 20% 10%;
+    --card-foreground: 40 33% 97%;
+    --popover: 180 20% 10%;
+    --popover-foreground: 40 33% 97%;
+    --primary: 174 60% 40%;
+    --primary-foreground: 180 20% 8%;
+    --secondary: 28 30% 45%;
+    --secondary-foreground: 40 33% 97%;
+    --accent: 43 74% 48%;
+    --accent-foreground: 180 20% 8%;
+    --muted: 180 15% 18%;
+    --muted-foreground: 40 15% 70%;
+    --border: 180 15% 20%;
+    --input: 180 15% 20%;
+    --ring: 174 60% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+    font-feature-settings: "ss01", "cv01";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: hsl(var(--accent) / 0.25);
+  }
+
+  /* Gold hairline divider */
+  .gold-rule {
+    border: 0;
+    height: 0.5px;
+    background: linear-gradient(90deg, transparent, hsl(var(--accent) / 0.8), transparent);
+  }
+
+  /* Technical label */
+  .label-tech {
+    @apply font-body text-[11px] uppercase tracking-[0.25em] text-accent;
+  }
+}
+
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  .text-balance { text-wrap: balance; }
+
+  .glass {
+    background: hsl(var(--background) / 0.65);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+  }
+
+  .glass-dark {
+    background: hsl(180 20% 8% / 0.55);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+  }
+
+  /* Luma matte overlay for text over images */
+  .luma-matte::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10,18,17,0.10) 0%, rgba(10,18,17,0.45) 100%);
+    pointer-events: none;
+  }
+
+  /* Topographic contour background */
+  .topo-bg {
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% 0%, hsl(var(--accent) / 0.04), transparent),
+      repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent 38px, hsl(var(--accent) / 0.05) 39px, hsl(var(--accent) / 0.05) 40px);
+  }
+
+  .perspective-1000 { perspective: 1000px; }
+  .preserve-3d { transform-style: preserve-3d; }
+  .backface-hidden { backface-visibility: hidden; }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  @keyframes float-slow {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-14px) rotate(0.4deg); }
+  }
+  .animate-float-slow { animation: float-slow 7s ease-in-out infinite; }
+
+  @keyframes drift {
+    0% { background-position: 0 0; }
+    100% { background-position: 400px 200px; }
+  }
+  .animate-drift { animation: drift 60s linear infinite; }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-120%); }
+    100% { transform: translateX(120%); }
+  }
+  .shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    transform: translateX(-120%);
+    animation: shimmer 1.8s infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

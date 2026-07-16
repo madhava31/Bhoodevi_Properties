@@ -1,0 +1,125 @@
+{
+  "name": "Property",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Residential",
+        "Farm Lands",
+        "Commercial",
+        "Open Plots",
+        "Investment Lands",
+        "Agricultural"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Available",
+        "Booked",
+        "Sold"
+      ],
+      "default": "Available"
+    },
+    "price": {
+      "type": "number"
+    },
+    "price_unit": {
+      "type": "string",
+      "enum": [
+        "Total",
+        "Per Acre",
+        "Per Sq.Yd"
+      ],
+      "default": "Total"
+    },
+    "area": {
+      "type": "string",
+      "description": "e.g. 12.5 Acres, 2400 Sq.Ft"
+    },
+    "area_acres": {
+      "type": "number"
+    },
+    "location": {
+      "type": "string"
+    },
+    "orr_distance_km": {
+      "type": "number",
+      "description": "Distance from ORR in km"
+    },
+    "short_description": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "highlights": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "amenities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "verified": {
+      "type": "boolean",
+      "default": true
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "latitude": {
+      "type": "number"
+    },
+    "longitude": {
+      "type": "number"
+    },
+    "nearby": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "distance_km": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "invest_roi_note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "type",
+    "price",
+    "location"
+  ]
+}

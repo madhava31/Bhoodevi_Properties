@@ -1,0 +1,273 @@
+const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
+
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Plus, Edit, Trash2, MapPin, Building, Activity, FileText, CheckCircle2, MessageSquare, ArrowLeft, ExternalLink, ShieldCheck, LogOut } from "lucide-react";
+import { formatPrice } from "@/lib/site";
+import { cn } from "@/lib/utils";
+import { clearAdminSession } from "@/pages/AdminLogin";
+
+const statusStyles = {
+  Available: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30",
+  Booked: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30",
+  Sold: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30",
+};
+
+export default function AdminDashboard() {
+  const [properties, setProperties] = useState([]);
+  const [inquiries, setInquiries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const propList = await db.entities.Property.list("-created_date", 100);
+      setProperties(propList);
+      
+      const inqList = await db.entities.Inquiry.list();
+      setInquiries(inqList || []);
+    } catch (err) {
+      console.error("Failed to load dashboard data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id, title) => {
+    if (window.confirm(`Are you sure you want to delete "${title}"?`)) {
+      try {
+        await db.entities.Property.delete(id);
+        setProperties((prev) => prev.filter((p) => p.id !== id));
+      } catch (err) {
+        alert("Failed to delete property. Please try again.");
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    clearAdminSession();
+    navigate("/admin-login", { replace: true });
+  };
+
+  const stats = {
+    total: properties.length,
+    available: properties.filter(p => p.status === "Available").length,
+    booked: properties.filter(p => p.status === "Booked").length,
+    sold: properties.filter(p => p.status === "Sold").length,
+    inquiries: inquiries.length
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-24 bg-background">
+        <div className="w-10 h-10 border-4 border-slate-200 border-t-accent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-24 pb-20 min-h-screen bg-background">
+      <div className="mx-auto max-w-8xl px-5 md:px-10">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 border-b border-border pb-8 mb-10">
+          <div>
+            <div className="flex items-center gap-2 text-sm text-accent mb-2">
+              <ShieldCheck className="w-4 h-4" />
+              <span className="font-semibold tracking-wider uppercase">Admin Panel</span>
+            </div>
+            <h1 className="font-display text-4xl md:text-5xl tracking-tight text-foreground">Estate Control Center</h1>
+            <p className="text-muted-foreground mt-2">Manage listings, track customer inquiries, and curate catalog details.</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card text-muted-foreground px-4 py-2.5 text-sm font-medium hover:border-rose-300 hover:text-rose-600 transition-all"
+            >
+              <LogOut className="w-4 h-4" /> Logout
+            </button>
+            <Link
+              to="/admin/properties/new"
+              className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-6 py-3 font-semibold hover:opacity-90 transition-opacity shadow-sm"
+            >
+              <Plus className="w-4 h-4" /> Add Property
+            </Link>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
+          <StatCard label="Total Listings" value={stats.total} icon={Building} />
+          <StatCard label="Available" value={stats.available} icon={CheckCircle2} color="text-emerald-600" />
+          <StatCard label="Booked" value={stats.booked} icon={Activity} color="text-amber-500" />
+          <StatCard label="Sold / Acquired" value={stats.sold} icon={FileText} color="text-rose-500" />
+          <StatCard label="Client Inquiries" value={stats.inquiries} icon={MessageSquare} color="text-accent" />
+        </div>
+
+        {/* Layout Grid */}
+        <div className="grid xl:grid-cols-3 gap-8">
+          
+          {/* Properties Table */}
+          <div className="xl:col-span-2 space-y-6">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <h2 className="font-display text-2xl">Property Directory</h2>
+                <span className="text-xs text-muted-foreground">Showing {properties.length} listings</span>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-muted/40 text-muted-foreground text-xs font-semibold uppercase border-b border-border">
+                      <th className="px-6 py-4">Property</th>
+                      <th className="px-6 py-4">Type</th>
+                      <th className="px-6 py-4">Price</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60 text-sm">
+                    {properties.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-12 text-center text-muted-foreground">
+                          No properties found. Click "Add Property" to create one.
+                        </td>
+                      </tr>
+                    ) : (
+                      properties.map((p) => {
+                        const imgUrl = p.images?.[0] || "/images/7a0e880ec_generated_a61bcacb.png";
+                        return (
+                          <tr key={p.id} className="hover:bg-muted/10 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={imgUrl}
+                                  alt={p.title}
+                                  className="w-12 h-12 rounded-lg object-cover bg-muted border border-border"
+                                />
+                                <div>
+                                  <div className="font-semibold text-foreground">{p.title}</div>
+                                  <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                    <MapPin className="w-3 h-3 text-accent" />
+                                    {p.location}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-muted-foreground font-medium">{p.type}</td>
+                            <td className="px-6 py-4 font-semibold text-foreground">
+                              {formatPrice(p.price)}
+                              {p.price_unit && p.price_unit !== "Total" && (
+                                <span className="text-xs text-muted-foreground font-normal"> / {p.price_unit}</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={cn("inline-flex text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full border", statusStyles[p.status] || statusStyles.Available)}>
+                                {p.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Link
+                                  to={`/properties/${p.slug || p.id}`}
+                                  target="_blank"
+                                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"
+                                  title="View Public Page"
+                                >
+                                  <ExternalLink className="w-4 h-4" />
+                                </Link>
+                                <button
+                                  onClick={() => navigate(`/admin/properties/edit/${p.id}`)}
+                                  className="p-2 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-lg transition-all"
+                                  title="Edit"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(p.id, p.title)}
+                                  className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Inquiries Sidebar */}
+          <div>
+            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm h-full flex flex-col">
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <h2 className="font-display text-2xl">Recent Inquiries</h2>
+                <span className="bg-accent/15 text-accent text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                  {inquiries.length} Active
+                </span>
+              </div>
+              
+              <div className="p-6 divide-y divide-border/60 overflow-y-auto max-h-[500px] flex-1">
+                {inquiries.length === 0 ? (
+                  <div className="text-center py-10 text-muted-foreground text-sm">
+                    No client inquiries received yet.
+                  </div>
+                ) : (
+                  inquiries.map((inq) => (
+                    <div key={inq.id} className="py-4 first:pt-0 last:pb-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-semibold text-foreground">{inq.name}</div>
+                        <span className="text-[10px] text-muted-foreground">
+                          {inq.phone}
+                        </span>
+                      </div>
+                      <div className="text-xs text-accent font-medium mt-1">
+                        Ref: {inq.property_title || "General Inquiry"}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2 bg-muted/30 p-2.5 rounded-lg border border-border/40 italic">
+                        "{inq.message}"
+                      </p>
+                      {inq.email && (
+                        <div className="text-[10px] text-muted-foreground/70 mt-2">
+                          Email: {inq.email}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, icon: Icon, color }) {
+  return (
+    <div className="bg-card border border-border p-5 rounded-2xl shadow-sm flex items-center gap-4">
+      <div className={cn("p-3 rounded-xl bg-muted/60 border border-border/40", color)}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div>
+        <div className="text-2xl font-bold font-display text-foreground">{value}</div>
+        <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
+      </div>
+    </div>
+  );
+}
