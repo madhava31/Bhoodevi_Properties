@@ -1,3 +1,9 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const isSupabaseEnabled = supabaseUrl && supabaseAnonKey && !supabaseUrl.includes("your-project-id");
+
 // LocalStorage helpers for persistence across refreshes and new tabs
 const STORAGE_KEYS = {
   PROPERTIES: "bhoodevi_properties",
@@ -237,117 +243,400 @@ const filterData = (data, criteria) => {
 };
 
 // Initialize the global mock DB structure
-globalThis.__BHOODEVI_DB__ = {
-  __isMock: true,
-  auth: {
-    isAuthenticated: async () => true,
-    me: async () => ({ name: "Local User", email: "user@local.dev", role: "admin" }),
-  },
-  entities: {
-    Property: {
-      list: async (order, limit) => {
-        let sorted = [...PROPERTIES];
-        if (order && order.startsWith("-")) {
-          const field = order.slice(1);
-          sorted.sort((a, b) => new Date(b[field] || b.created_date) - new Date(a[field] || a.created_date));
+// Initialize the global mock DB structure or connect to Supabase
+if (!globalThis.__BHOODEVI_DB__) {
+  if (isSupabaseEnabled) {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    globalThis.__BHOODEVI_DB__ = {
+      __isMock: false,
+      auth: {
+        isAuthenticated: async () => {
+          const { data: { session } } = await supabase.auth.getSession();
+          return !!session;
+        },
+        me: async () => {
+          const { data: { user }, error } = await supabase.auth.getUser();
+          if (error || !user) return null;
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata?.full_name || user.email?.split('@')[0],
+            role: user.app_metadata?.role || 'admin'
+          };
+        },
+        loginViaEmailPassword: async (email, password) => {
+          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          return data.user;
+        },
+        register: async ({ email, password }) => {
+          const { data, error } = await supabase.auth.signUp({ email, password });
+          if (error) throw error;
+          return data;
+        },
+        verifyOtp: async ({ email, otpCode }) => {
+          const { data, error } = await supabase.auth.verifyOtp({
+            email,
+            token: otpCode,
+            type: 'signup'
+          });
+          if (error) throw error;
+          return { access_token: data.session?.access_token };
+        },
+        resendOtp: async (email) => {
+          const { error } = await supabase.auth.resend({
+            email,
+            type: 'signup'
+          });
+          if (error) throw error;
+        },
+        loginWithProvider: async (provider, redirectTo) => {
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider,
+            options: {
+              redirectTo: window.location.origin + (redirectTo || '/')
+            }
+          });
+          if (error) throw error;
+        },
+        setToken: (token) => {}
+      },
+      entities: {
+        Property: {
+          list: async (order, limit) => {
+            let query = supabase.from('properties').select('*');
+            if (order) {
+              const desc = order.startsWith("-");
+              const column = desc ? order.slice(1) : order;
+              const colName = column === 'created_date' ? 'created_at' : column;
+              query = query.order(colName, { ascending: !desc });
+            }
+            if (limit) {
+              query = query.limit(limit);
+            }
+            const { data, error } = await query;
+            if (error) throw error;
+            return (data || []).map(p => ({ ...p, created_date: p.created_at }));
+          },
+          filter: async (criteria, order, limit) => {
+            let query = supabase.from('properties').select('*');
+            for (const key in criteria) {
+              const dbKey = key === 'created_date' ? 'created_at' : key;
+              query = query.eq(dbKey, criteria[key]);
+            }
+            if (order) {
+              const desc = order.startsWith("-");
+              const column = desc ? order.slice(1) : order;
+              const colName = column === 'created_date' ? 'created_at' : column;
+              query = query.order(colName, { ascending: !desc });
+            }
+            if (limit) {
+              query = query.limit(limit);
+            }
+            const { data, error } = await query;
+            if (error) throw error;
+            return (data || []).map(p => ({ ...p, created_date: p.created_at }));
+          },
+          get: async (id) => {
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+            let query = supabase.from('properties').select('*');
+            if (isUuid) {
+              query = query.eq('id', id);
+            } else {
+              query = query.eq('slug', id);
+            }
+            const { data, error } = await query.maybeSingle();
+            if (error) throw error;
+            if (!data) return null;
+            return { ...data, created_date: data.created_at };
+          },
+          create: async (data) => {
+            const insertData = { ...data };
+            delete insertData.id;
+            delete insertData.created_date;
+            const { data: created, error } = await supabase
+              .from('properties')
+              .insert([insertData])
+              .select()
+              .single();
+            if (error) throw error;
+            return { ...created, created_date: created.created_at };
+          },
+          update: async (id, data) => {
+            const updateData = { ...data };
+            delete updateData.id;
+            delete updateData.created_date;
+            delete updateData.created_at;
+            const { data: updated, error } = await supabase
+              .from('properties')
+              .update(updateData)
+              .eq('id', id)
+              .select()
+              .single();
+            if (error) throw error;
+            return { ...updated, created_date: updated.created_at };
+          },
+          delete: async (id) => {
+            const { error } = await supabase
+              .from('properties')
+              .delete()
+              .eq('id', id);
+            if (error) throw error;
+            return {};
+          },
+        },
+        FAQ: {
+          list: async (order, limit) => {
+            let query = supabase.from('faqs').select('*');
+            query = query.order('order_num', { ascending: true });
+            if (limit) query = query.limit(limit);
+            const { data, error } = await query;
+            if (error) throw error;
+            return (data || []).map(f => ({ ...f, order: f.order_num }));
+          },
+          filter: async (criteria, order, limit) => {
+            let query = supabase.from('faqs').select('*');
+            for (const key in criteria) {
+              const dbKey = key === 'order' ? 'order_num' : key;
+              query = query.eq(dbKey, criteria[key]);
+            }
+            query = query.order('order_num', { ascending: true });
+            if (limit) query = query.limit(limit);
+            const { data, error } = await query;
+            if (error) throw error;
+            return (data || []).map(f => ({ ...f, order: f.order_num }));
+          },
+          get: async (id) => {
+            const { data, error } = await supabase.from('faqs').select('*').eq('id', id).maybeSingle();
+            if (error) throw error;
+            if (!data) return null;
+            return { ...data, order: data.order_num };
+          },
+          create: async (data) => {
+            const insertData = { ...data };
+            if (insertData.order !== undefined) {
+              insertData.order_num = insertData.order;
+              delete insertData.order;
+            }
+            const { data: created, error } = await supabase.from('faqs').insert([insertData]).select().single();
+            if (error) throw error;
+            return { ...created, order: created.order_num };
+          },
+          update: async (id, data) => {
+            const updateData = { ...data };
+            if (updateData.order !== undefined) {
+              updateData.order_num = updateData.order;
+              delete updateData.order;
+            }
+            const { data: updated, error } = await supabase.from('faqs').update(updateData).eq('id', id).select().single();
+            if (error) throw error;
+            return { ...updated, order: updated.order_num };
+          },
+          delete: async (id) => {
+            const { error } = await supabase.from('faqs').delete().eq('id', id);
+            if (error) throw error;
+            return {};
+          },
+        },
+        Testimonial: {
+          list: async (order, limit) => {
+            let query = supabase.from('testimonials').select('*');
+            query = query.order('created_at', { ascending: false });
+            if (limit) query = query.limit(limit);
+            const { data, error } = await query;
+            if (error) throw error;
+            return data || [];
+          },
+          filter: async (criteria, order, limit) => {
+            let query = supabase.from('testimonials').select('*');
+            for (const key in criteria) {
+              query = query.eq(key, criteria[key]);
+            }
+            query = query.order('created_at', { ascending: false });
+            if (limit) query = query.limit(limit);
+            const { data, error } = await query;
+            if (error) throw error;
+            return data || [];
+          },
+          get: async (id) => {
+            const { data, error } = await supabase.from('testimonials').select('*').eq('id', id).maybeSingle();
+            if (error) throw error;
+            return data;
+          },
+          create: async (data) => {
+            const { data: created, error } = await supabase.from('testimonials').insert([data]).select().single();
+            if (error) throw error;
+            return created;
+          },
+          update: async (id, data) => {
+            const { data: updated, error } = await supabase.from('testimonials').update(data).eq('id', id).select().single();
+            if (error) throw error;
+            return updated;
+          },
+          delete: async (id) => {
+            const { error } = await supabase.from('testimonials').delete().eq('id', id);
+            if (error) throw error;
+            return {};
+          },
+        },
+        Inquiry: {
+          list: async () => {
+            const { data, error } = await supabase.from('inquiries').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            return (data || []).map(i => ({ ...i, created_date: i.created_at }));
+          },
+          filter: async (criteria) => {
+            let query = supabase.from('inquiries').select('*');
+            for (const key in criteria) {
+              query = query.eq(key, criteria[key]);
+            }
+            const { data, error } = await query.order('created_at', { ascending: false });
+            if (error) throw error;
+            return (data || []).map(i => ({ ...i, created_date: i.created_at }));
+          },
+          get: async (id) => {
+            const { data, error } = await supabase.from('inquiries').select('*').eq('id', id).maybeSingle();
+            if (error) throw error;
+            if (!data) return null;
+            return { ...data, created_date: data.created_at };
+          },
+          create: async (data) => {
+            const { data: created, error } = await supabase.from('inquiries').insert([data]).select().single();
+            if (error) throw error;
+            return { ...created, created_date: created.created_at };
+          },
+          update: async (id, data) => {
+            const { data: updated, error } = await supabase.from('inquiries').update(data).eq('id', id).select().single();
+            if (error) throw error;
+            return { ...updated, created_date: updated.created_at };
+          },
+          delete: async (id) => {
+            const { error } = await supabase.from('inquiries').delete().eq('id', id);
+            if (error) throw error;
+            return {};
+          },
         }
-        return sorted.slice(0, limit);
       },
-      filter: async (criteria, order, limit) => {
-        let filtered = filterData(PROPERTIES, criteria);
-        let sorted = [...filtered];
-        if (order && order.startsWith("-")) {
-          const field = order.slice(1);
-          sorted.sort((a, b) => new Date(b[field] || b.created_date) - new Date(a[field] || a.created_date));
+      integrations: {
+        Core: {
+          UploadFile: async () => ({ file_url: '/images/7a0e880ec_generated_a61bcacb.png' })
         }
-        return sorted.slice(0, limit);
+      }
+    };
+  } else {
+    globalThis.__BHOODEVI_DB__ = {
+      __isMock: true,
+      auth: {
+        isAuthenticated: async () => true,
+        me: async () => ({ name: "Local User", email: "user@local.dev", role: "admin" }),
       },
-      get: async (id) => PROPERTIES.find(p => p.id === id || p.slug === id) || null,
-      create: async (data) => {
-        const newProp = {
-          id: "prop-" + Date.now(),
-          created_date: new Date().toISOString(),
-          verified: true,
-          featured: false,
-          status: "Available",
-          ...data,
-        };
-        PROPERTIES.unshift(newProp);
-        setStorageItem(STORAGE_KEYS.PROPERTIES, PROPERTIES);
-        return newProp;
+      entities: {
+        Property: {
+          list: async (order, limit) => {
+            let sorted = [...PROPERTIES];
+            if (order && order.startsWith("-")) {
+              const field = order.slice(1);
+              sorted.sort((a, b) => new Date(b[field] || b.created_date) - new Date(a[field] || a.created_date));
+            }
+            return sorted.slice(0, limit);
+          },
+          filter: async (criteria, order, limit) => {
+            let filtered = filterData(PROPERTIES, criteria);
+            let sorted = [...filtered];
+            if (order && order.startsWith("-")) {
+              const field = order.slice(1);
+              sorted.sort((a, b) => new Date(b[field] || b.created_date) - new Date(a[field] || a.created_date));
+            }
+            return sorted.slice(0, limit);
+          },
+          get: async (id) => PROPERTIES.find(p => p.id === id || p.slug === id) || null,
+          create: async (data) => {
+            const newProp = {
+              id: "prop-" + Date.now(),
+              created_date: new Date().toISOString(),
+              verified: true,
+              featured: false,
+              status: "Available",
+              ...data,
+            };
+            PROPERTIES.unshift(newProp);
+            setStorageItem(STORAGE_KEYS.PROPERTIES, PROPERTIES);
+            return newProp;
+          },
+          update: async (id, data) => {
+            PROPERTIES = PROPERTIES.map(p => p.id === id ? { ...p, ...data } : p);
+            setStorageItem(STORAGE_KEYS.PROPERTIES, PROPERTIES);
+            return PROPERTIES.find(p => p.id === id);
+          },
+          delete: async (id) => {
+            PROPERTIES = PROPERTIES.filter(p => p.id !== id);
+            setStorageItem(STORAGE_KEYS.PROPERTIES, PROPERTIES);
+            return {};
+          },
+        },
+        FAQ: {
+          list: async (order, limit) => FAQS.slice(0, limit),
+          filter: async (criteria, order, limit) => filterData(FAQS, criteria).slice(0, limit),
+          get: async (id) => FAQS.find(f => f.id === id) || null,
+          create: async (data) => {
+            FAQS.unshift(data);
+            setStorageItem(STORAGE_KEYS.FAQS, FAQS);
+            return data;
+          },
+          update: async (id, data) => {
+            FAQS = FAQS.map(f => f.id === id ? { ...f, ...data } : f);
+            setStorageItem(STORAGE_KEYS.FAQS, FAQS);
+            return data;
+          },
+          delete: async (id) => {
+            FAQS = FAQS.filter(f => f.id !== id);
+            setStorageItem(STORAGE_KEYS.FAQS, FAQS);
+            return {};
+          },
+        },
+        Testimonial: {
+          list: async (order, limit) => TESTIMONIALS.slice(0, limit),
+          filter: async (criteria, order, limit) => filterData(TESTIMONIALS, criteria).slice(0, limit),
+          get: async (id) => TESTIMONIALS.find(t => t.id === id) || null,
+          create: async (data) => {
+            TESTIMONIALS.unshift(data);
+            setStorageItem(STORAGE_KEYS.TESTIMONIALS, TESTIMONIALS);
+            return data;
+          },
+          update: async (id, data) => {
+            TESTIMONIALS = TESTIMONIALS.map(t => t.id === id ? { ...t, ...data } : t);
+            setStorageItem(STORAGE_KEYS.TESTIMONIALS, TESTIMONIALS);
+            return data;
+          },
+          delete: async (id) => {
+            TESTIMONIALS = TESTIMONIALS.filter(t => t.id !== id);
+            setStorageItem(STORAGE_KEYS.TESTIMONIALS, TESTIMONIALS);
+            return {};
+          },
+        },
+        Inquiry: {
+          list: async () => INQUIRIES,
+          filter: async (criteria) => filterData(INQUIRIES, criteria),
+          get: async (id) => INQUIRIES.find(i => i.id === id) || null,
+          create: async (data) => {
+            const newInq = {
+              id: "inquiry-" + Date.now(),
+              created_date: new Date().toISOString(),
+              ...data
+            };
+            INQUIRIES.unshift(newInq);
+            setStorageItem(STORAGE_KEYS.INQUIRIES, INQUIRIES);
+            return newInq;
+          },
+          update: async (id, data) => data,
+          delete: async (id) => ({}),
+        }
       },
-      update: async (id, data) => {
-        PROPERTIES = PROPERTIES.map(p => p.id === id ? { ...p, ...data } : p);
-        setStorageItem(STORAGE_KEYS.PROPERTIES, PROPERTIES);
-        return PROPERTIES.find(p => p.id === id);
-      },
-      delete: async (id) => {
-        PROPERTIES = PROPERTIES.filter(p => p.id !== id);
-        setStorageItem(STORAGE_KEYS.PROPERTIES, PROPERTIES);
-        return {};
-      },
-    },
-    FAQ: {
-      list: async (order, limit) => FAQS.slice(0, limit),
-      filter: async (criteria, order, limit) => filterData(FAQS, criteria).slice(0, limit),
-      get: async (id) => FAQS.find(f => f.id === id) || null,
-      create: async (data) => {
-        FAQS.unshift(data);
-        setStorageItem(STORAGE_KEYS.FAQS, FAQS);
-        return data;
-      },
-      update: async (id, data) => {
-        FAQS = FAQS.map(f => f.id === id ? { ...f, ...data } : f);
-        setStorageItem(STORAGE_KEYS.FAQS, FAQS);
-        return data;
-      },
-      delete: async (id) => {
-        FAQS = FAQS.filter(f => f.id !== id);
-        setStorageItem(STORAGE_KEYS.FAQS, FAQS);
-        return {};
-      },
-    },
-    Testimonial: {
-      list: async (order, limit) => TESTIMONIALS.slice(0, limit),
-      filter: async (criteria, order, limit) => filterData(TESTIMONIALS, criteria).slice(0, limit),
-      get: async (id) => TESTIMONIALS.find(t => t.id === id) || null,
-      create: async (data) => {
-        TESTIMONIALS.unshift(data);
-        setStorageItem(STORAGE_KEYS.TESTIMONIALS, TESTIMONIALS);
-        return data;
-      },
-      update: async (id, data) => {
-        TESTIMONIALS = TESTIMONIALS.map(t => t.id === id ? { ...t, ...data } : t);
-        setStorageItem(STORAGE_KEYS.TESTIMONIALS, TESTIMONIALS);
-        return data;
-      },
-      delete: async (id) => {
-        TESTIMONIALS = TESTIMONIALS.filter(t => t.id !== id);
-        setStorageItem(STORAGE_KEYS.TESTIMONIALS, TESTIMONIALS);
-        return {};
-      },
-    },
-    Inquiry: {
-      list: async () => INQUIRIES,
-      filter: async (criteria) => filterData(INQUIRIES, criteria),
-      get: async (id) => INQUIRIES.find(i => i.id === id) || null,
-      create: async (data) => {
-        const newInq = {
-          id: "inquiry-" + Date.now(),
-          created_date: new Date().toISOString(),
-          ...data
-        };
-        INQUIRIES.unshift(newInq);
-        setStorageItem(STORAGE_KEYS.INQUIRIES, INQUIRIES);
-        return newInq;
-      },
-      update: async (id, data) => data,
-      delete: async (id) => ({}),
-    }
-  },
-  integrations: {
-    Core: {
-      UploadFile: async () => ({ file_url: '/images/7a0e880ec_generated_a61bcacb.png' })
-    }
+      integrations: {
+        Core: {
+          UploadFile: async () => ({ file_url: '/images/7a0e880ec_generated_a61bcacb.png' })
+        }
+      }
+    };
   }
-};
+}

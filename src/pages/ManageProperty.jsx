@@ -38,7 +38,9 @@ export default function ManageProperty() {
     description: "",
     highlights: [],
     amenities: [],
-    images: ["/images/7a0e880ec_generated_a61bcacb.png"]
+    images: ["/images/7a0e880ec_generated_a61bcacb.png"],
+    featured: false,
+    verified: true
   });
 
   const [newHighlight, setNewHighlight] = useState("");
@@ -77,7 +79,9 @@ export default function ManageProperty() {
           description: p.description || "",
           highlights: p.highlights || [],
           amenities: p.amenities || [],
-          images: p.images && p.images.length ? p.images : ["/images/7a0e880ec_generated_a61bcacb.png"]
+          images: p.images && p.images.length ? p.images : ["/images/7a0e880ec_generated_a61bcacb.png"],
+          featured: p.featured || false,
+          verified: p.verified !== undefined ? p.verified : true
         });
       } else {
         setMessage({ text: "Property listing not found.", type: "error" });
