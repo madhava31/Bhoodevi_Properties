@@ -85,7 +85,7 @@ export default function Properties() {
       </section>
 
       {/* Toolbar */}
-      <section className="sticky top-[68px] z-30 glass border-b border-border">
+      <section className="sticky top-[68px] z-40 glass border-b border-border">
         <div className="mx-auto max-w-8xl px-5 md:px-10 py-3 flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -112,10 +112,10 @@ export default function Properties() {
         <AnimatePresence>
           {filtersOpen && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden border-t border-border"
+              initial={{ height: 0, opacity: 0, overflow: "hidden" }}
+              animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }}
+              exit={{ height: 0, opacity: 0, overflow: "hidden" }}
+              className="border-t border-border"
             >
               <div className="mx-auto max-w-8xl px-5 md:px-10 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <FilterField label="Property Type">
@@ -133,10 +133,10 @@ export default function Properties() {
                     placeholder="Any Budget"
                     options={[
                       { value: "", label: "Any Budget" },
-                      { value: "5000000", label: "Under ₹5 L" },
-                      { value: "25000000", label: "Under ₹25 L" },
-                      { value: "100000000", label: "Under ₹1 Cr" },
-                      { value: "500000000", label: "Under ₹5 Cr" }
+                      { value: "500000", label: "Under ₹5 L" },
+                      { value: "2500000", label: "Under ₹25 L" },
+                      { value: "10000000", label: "Under ₹1 Cr" },
+                      { value: "50000000", label: "Under ₹5 Cr" }
                     ]}
                   />
                 </FilterField>
@@ -203,7 +203,7 @@ export default function Properties() {
             <motion.div layout className={`grid gap-5 ${view === "list" ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
               <AnimatePresence>
                 {paged.map((p, i) => (
-                  <motion.div key={p.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <motion.div key={p.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
                     <PropertyCard property={p} index={i} compactImage />
                   </motion.div>
                 ))}

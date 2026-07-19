@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin, Mail, Clock, Instagram, Facebook, Linkedin } from "lucide-react";
+import { MapPin, Mail, Clock, Instagram, Facebook } from "lucide-react";
 import { SITE, NAV_LINKS, CATEGORIES } from "@/lib/site";
 
 export default function Footer() {
@@ -10,8 +10,8 @@ export default function Footer() {
         <div className="grid gap-12 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <div className="flex items-center gap-3 mb-5">
-              <span className="grid place-items-center w-10 h-10 rounded-full border border-accent/60">
-                <span className="font-display text-accent text-xl">B</span>
+              <span className="grid place-items-center w-16 h-16 rounded-full border border-accent/60 overflow-hidden bg-white shadow-sm">
+                <img src="/images/logo.png" alt="Bhoodevi Logo" className="w-full h-full p-2 object-contain" />
               </span>
               <span>
                 <span className="block font-display text-2xl">Bhoodevi</span>
@@ -22,11 +22,22 @@ export default function Footer() {
               A curated portfolio of verified land estates, farm lands, and investment parcels — earthed in trust, ethereal in design.
             </p>
             <div className="flex gap-3 mt-6">
-              {[Instagram, Facebook, Linkedin].map((Icon, i) => (
-                <a key={i} href="#" aria-label="Social" className="grid place-items-center w-10 h-10 rounded-full border border-primary-foreground/20 hover:border-accent hover:text-accent transition-colors">
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
+              <a
+                href="https://www.instagram.com/bhoodevi__properties?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="grid place-items-center w-10 h-10 rounded-full border border-primary-foreground/20 hover:border-accent hover:text-accent transition-colors"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a
+                href="#"
+                aria-label="Facebook"
+                className="grid place-items-center w-10 h-10 rounded-full border border-primary-foreground/20 hover:border-accent hover:text-accent transition-colors"
+              >
+                <Facebook className="w-4 h-4" />
+              </a>
             </div>
           </div>
 

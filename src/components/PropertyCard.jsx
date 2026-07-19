@@ -39,14 +39,14 @@ export default function PropertyCard({ property, index = 0, compactImage = false
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6, delay: (index % 3) * 0.08, ease: [0.22, 1, 0.36, 1] }}
-      className="perspective-1000"
+      className="perspective-1000 h-full"
     >
       <div
         ref={ref}
         onMouseMove={handleMove}
         onMouseLeave={reset}
         style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` }}
-        className="group preserve-3d relative rounded-2xl overflow-hidden border border-border bg-card transition-transform duration-200 ease-out hover:shadow-2xl hover:shadow-primary/10"
+        className="group preserve-3d relative rounded-2xl overflow-hidden border border-border bg-card transition-transform duration-200 ease-out hover:shadow-2xl hover:shadow-primary/10 flex flex-col h-full"
       >
         {/* Image */}
         <div className={cn("relative overflow-hidden", compactImage ? "aspect-[16/10]" : "aspect-[4/5]")}>
@@ -97,7 +97,7 @@ export default function PropertyCard({ property, index = 0, compactImage = false
         </div>
 
         {/* Content */}
-        <div className="p-5" style={{ transform: "translateZ(20px)" }}>
+        <div className="p-5 flex flex-col flex-1" style={{ transform: "translateZ(20px)" }}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="font-display text-2xl leading-tight">{property.title}</h3>
@@ -118,7 +118,7 @@ export default function PropertyCard({ property, index = 0, compactImage = false
           <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{property.short_description}</p>
 
           {/* Technical ribbon */}
-          <div className="mt-4 pt-4 border-t border-border/70 grid grid-cols-3 gap-2 text-center font-mono text-[11px]">
+          <div className="mt-auto pt-4 border-t border-border/70 grid grid-cols-3 gap-2 text-center font-mono text-[11px]">
             <div>
               <div className="text-foreground font-semibold">{property.area}</div>
               <div className="text-muted-foreground">Area</div>

@@ -41,13 +41,13 @@ export default function Navbar() {
       )}>
         <nav className="mx-auto max-w-8xl px-5 md:px-10 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <span className="relative grid place-items-center w-9 h-9 rounded-full border border-accent/50">
-              <span className="font-display text-accent text-lg leading-none">B</span>
+            <span className="relative grid place-items-center w-14 h-14 rounded-full border border-accent/50 overflow-hidden bg-white shadow-sm">
+              <img src="/images/logo.png" alt="Bhoodevi Logo" className="w-full h-full p-1.5 object-contain" />
               <span className="absolute inset-0 rounded-full border border-accent/20 group-hover:scale-110 transition-transform" />
             </span>
             <span className="leading-tight">
-              <span className="block font-display text-xl text-foreground tracking-wide">Bhoodevi</span>
-              <span className="block label-tech !text-[9px] !tracking-[0.3em]">Properties</span>
+              <span className="block font-display text-2xl text-foreground tracking-wide">Bhoodevi</span>
+              <span className="block label-tech !text-[10px] !tracking-[0.3em]">Properties</span>
             </span>
           </Link>
 
@@ -57,7 +57,7 @@ export default function Navbar() {
                 key={l.label}
                 to={l.to}
                 onClick={() => handleAnchor(l.to)}
-                className="relative text-sm font-medium text-foreground/80 hover:text-foreground transition-colors group"
+                className="relative text-base font-semibold text-foreground/80 hover:text-foreground transition-colors group"
               >
                 {l.label}
                 <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-accent transition-all duration-300 group-hover:w-full" />
