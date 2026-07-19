@@ -9,7 +9,7 @@ import InquiryForm from "@/components/InquiryForm";
 import { formatPrice, SITE } from "@/lib/site";
 import Skeleton from "@/components/Skeleton";
 import {
-  MapPin, Maximize, BadgeCheck, Phone, MessageCircle, Calendar,
+  MapPin, Maximize, BadgeCheck, MessageCircle,
   ChevronLeft, ChevronRight, Check, Download, Compass, Home, ArrowLeft, X
 } from "lucide-react";
 
@@ -224,7 +224,7 @@ export default function PropertyDetail() {
                     `🏷️ Type: ${prop.type}\n` +
                     `💰 Price: ${formatPrice(prop.price)} (${prop.price_unit})\n` +
                     `📐 Area: ${prop.area}\n` +
-                    `\nPlease share more details and help me schedule a site visit.\n\n` +
+                    `\nPlease share more details and help me schedule a call appointment.\n\n` +
                     `🔗 ${window.location.href}`
                   )}`}
                   target="_blank"
@@ -233,17 +233,12 @@ export default function PropertyDetail() {
                 >
                   <MessageCircle className="w-4 h-4" /> WhatsApp Enquiry
                 </a>
-                <a href={`tel:${SITE.phoneRaw}`} className="flex items-center justify-center gap-2 rounded-full border border-border py-3 font-semibold hover:border-accent hover:text-accent transition-colors">
-                  <Phone className="w-4 h-4" /> Call Expert
-                </a>
-                <button className="w-full flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground py-3 font-semibold hover:bg-accent hover:text-accent-foreground transition-colors">
-                  <Calendar className="w-4 h-4" /> Book Site Visit
-                </button>
+
               </div>
 
               <hr className="gold-rule my-5" />
               <div className="label-tech mb-3">Quick Inquiry</div>
-              <InquiryForm propertyTitle={prop.title} compact />
+              <InquiryForm propertyTitle={prop.title} propertyId={prop.id} compact />
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin, Phone, Mail, Clock, Instagram, Facebook, Linkedin } from "lucide-react";
+import { MapPin, Mail, Clock, Instagram, Facebook, Linkedin } from "lucide-react";
 import { SITE, NAV_LINKS, CATEGORIES } from "@/lib/site";
 
 export default function Footer() {
@@ -56,7 +56,7 @@ export default function Footer() {
             <h4 className="label-tech mb-5">Contact</h4>
             <ul className="space-y-4 text-sm text-primary-foreground/75">
               <li className="flex gap-3"><MapPin className="w-4 h-4 mt-0.5 shrink-0 text-accent" />{SITE.address}</li>
-              <li><a href={`tel:${SITE.phoneRaw}`} className="flex gap-3 hover:text-accent"><Phone className="w-4 h-4 mt-0.5 shrink-0 text-accent" />{SITE.phone}</a></li>
+
               <li><a href={`mailto:${SITE.email}`} className="flex gap-3 hover:text-accent"><Mail className="w-4 h-4 mt-0.5 shrink-0 text-accent" />{SITE.email}</a></li>
               <li className="flex gap-3"><Clock className="w-4 h-4 mt-0.5 shrink-0 text-accent" />{SITE.hours}</li>
             </ul>

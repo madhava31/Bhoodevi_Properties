@@ -3,7 +3,7 @@ const db = globalThis.__BHOODEVI_DB__ || { auth:{ isAuthenticated: async()=>fals
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { motion } from "framer-motion";
-import { ArrowRight, Calendar, ChevronDown } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const HERO_IMG = "/images/7a0e880ec_generated_a61bcacb.png";
@@ -197,14 +197,7 @@ export default function Hero3D() {
               Explore Estates
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <a
-              href="#contact"
-              onClick={(e) => { e.preventDefault(); document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" }); }}
-              className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/30 px-7 py-4 font-semibold hover:border-accent hover:text-accent transition-colors"
-            >
-              <Calendar className="w-4 h-4" />
-              Schedule Site Visit
-            </a>
+
           </motion.div>
         </div>
 
@@ -219,7 +212,7 @@ export default function Hero3D() {
             ["420+", "Verified Properties"],
             ["960 ac", "Acres Sold"],
             ["14 yrs", "Experience"],
-            ["5200+", "Site Visits"],
+            ["5200+", "Consultations"],
           ].map(([v, l]) => (
             <div key={l} className="bg-primary/40 backdrop-blur-sm px-5 py-5">
               <div className="font-display text-3xl text-accent">{v}</div>

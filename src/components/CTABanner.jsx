@@ -1,7 +1,6 @@
 const db = globalThis.__BHOODEVI_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
 
-import { Link } from "react-router-dom";
-import { Phone, MessageCircle, Calendar } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { SITE } from "@/lib/site";
 import ScrollReveal from "@/components/ScrollReveal";
 
@@ -20,18 +19,14 @@ export default function CTABanner() {
               <span className="label-tech">Begin the Acquisition</span>
             </div>
             <h2 className="font-display text-4xl md:text-6xl leading-[1.05] text-balance">
-              Your next estate awaits a <span className="text-accent">site visit</span>.
+              Your next estate starts with a <span className="text-accent">call appointment</span>.
             </h2>
             <p className="mt-5 text-primary-foreground/80 text-lg max-w-lg">
-              Book a concierge visit with our surveyor. Clear titles, soil brief, and corridor analysis — on arrival.
+              Book a call consultation with our team. Clear titles, corridor analysis, and documentation support — simplified.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
-              <Link to="/properties" className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-6 py-3.5 font-semibold hover:scale-[1.03] transition-transform">
-                <Calendar className="w-4 h-4" /> Book Site Visit
-              </Link>
-              <a href={`tel:${SITE.phoneRaw}`} className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/30 px-6 py-3.5 font-semibold hover:border-accent hover:text-accent transition-colors">
-                <Phone className="w-4 h-4" /> Contact Expert
-              </a>
+
+
               <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/30 px-6 py-3.5 font-semibold hover:border-accent hover:text-accent transition-colors">
                 <MessageCircle className="w-4 h-4" /> WhatsApp
               </a>

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function InquiryForm({ propertyTitle, compact = false }) {
+export default function InquiryForm({ propertyTitle, propertyId, compact = false }) {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: propertyTitle ? `I'm interested in ${propertyTitle}.` : "" });
   const [status, setStatus] = useState("idle"); // idle | loading | success | error
   const [error, setError] = useState("");
@@ -20,7 +20,8 @@ export default function InquiryForm({ propertyTitle, compact = false }) {
     try {
       await db.entities.Inquiry.create({
         name: form.name, email: form.email, phone: form.phone,
-        message: form.message, property_title: propertyTitle, type: "Inquiry"
+        message: form.message, property_id: propertyId || null,
+        property_title: propertyTitle, type: "Inquiry"
       });
       setStatus("success");
     } catch (err) {

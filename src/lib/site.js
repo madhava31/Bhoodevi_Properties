@@ -6,7 +6,7 @@ export const SITE = {
   tagline: "Earthed Etherealism",
   phone: "+1 (555) 162-7993",
   phoneRaw: "+15551627993",
-  whatsapp: "15551627993",
+  whatsapp: "919100665887",
   email: "estates@bhoodevi.properties",
   address: "Bhoodevi House, Jubilee Hills, Hyderabad, Telangana 500033",
   hours: "Mon – Sat · 9:30 AM – 7:00 PM IST",
@@ -27,14 +27,14 @@ export const STATS = [
   { value: 960, suffix: " ac", label: "Acres Sold" },
   { value: 38, suffix: "", label: "Projects" },
   { value: 14, suffix: " yrs", label: "Years of Experience" },
-  { value: 5200, suffix: "+", label: "Site Visits Conducted" },
+  { value: 5200, suffix: "+", label: "Call Appointments Booked" },
 ];
 
 export const TRUST_ITEMS = [
   { label: "Verified Properties", icon: "ShieldCheck" },
   { label: "Legal Assistance", icon: "Scale" },
   { label: "Clear Titles", icon: "ScrollText" },
-  { label: "Site Visit Support", icon: "MapPin" },
+  { label: "Call Support & Guidance", icon: "PhoneCall" },
   { label: "Trusted by Investors", icon: "TrendingUp" },
 ];
 
@@ -53,7 +53,7 @@ export const WHY_CHOOSE = [
   { title: "Prime Locations", desc: "Curated parcels along emerging infrastructure and transit nodes.", icon: "MapPinned" },
   { title: "Transparent Pricing", desc: "No hidden margins. Surveyor-grade pricing with full cost breakdown.", icon: "ReceiptText" },
   { title: "Legal Support", desc: "End-to-end registration, mutation, and patta transfer handled in-house.", icon: "Scale" },
-  { title: "Site Visits", desc: "Concierge-grade site visits with surveyor and soil brief on arrival.", icon: "Compass" },
+  { title: "Call Appointments", desc: "One-on-one expert consultations to map and discuss your land goals.", icon: "PhoneCall" },
 ];
 
 export const SERVICES = [
@@ -61,7 +61,7 @@ export const SERVICES = [
   { title: "Investment Consulting", desc: "Corridor analysis and ROI modelling across high-growth zones.", icon: "TrendingUp" },
   { title: "Legal Verification", desc: "Title search, encumbrance, and litigation due diligence.", icon: "Scale" },
   { title: "Documentation", desc: "Sale deed, registration, mutation, and patta — fully managed.", icon: "FileSignature" },
-  { title: "Site Visits", desc: "Scheduled concierge visits with on-site surveyor briefings.", icon: "MapPin" },
+  { title: "Call Consultations", desc: "Scheduled video/voice calls to review title deeds and project briefs.", icon: "PhoneCall" },
   { title: "Property Marketing", desc: "Cinematic media, 3D site plans, and qualified lead generation.", icon: "Megaphone" },
 ];
 

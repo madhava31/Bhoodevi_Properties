@@ -246,6 +246,9 @@ const filterData = (data, criteria) => {
 // Initialize the global mock DB structure or connect to Supabase
 if (!globalThis.__BHOODEVI_DB__) {
   if (isSupabaseEnabled) {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.INQUIRIES);
+    } catch (e) {}
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
     globalThis.__BHOODEVI_DB__ = {
       __isMock: false,
@@ -481,34 +484,108 @@ if (!globalThis.__BHOODEVI_DB__) {
         },
         Inquiry: {
           list: async () => {
-            const { data, error } = await supabase.from('inquiries').select('*').order('created_at', { ascending: false });
-            if (error) throw error;
-            return (data || []).map(i => ({ ...i, created_date: i.created_at }));
+            const { data: inqs, error: inqError } = await supabase.from('inquiries').select('*').order('created_at', { ascending: false });
+            if (inqError) throw inqError;
+            
+            const { data: props, error: propError } = await supabase.from('properties').select('id, title');
+            const propMap = {};
+            if (!propError && props) {
+              props.forEach(p => { propMap[p.id] = p.title; });
+            }
+            
+            return (inqs || []).map(i => ({
+              ...i,
+              created_date: i.created_at,
+              property_title: propMap[i.property_id] || null
+            }));
           },
           filter: async (criteria) => {
+            const queryCriteria = { ...criteria };
+            delete queryCriteria.type;
+            delete queryCriteria.property_title;
+            
             let query = supabase.from('inquiries').select('*');
-            for (const key in criteria) {
-              query = query.eq(key, criteria[key]);
+            for (const key in queryCriteria) {
+              const dbKey = key === 'created_date' ? 'created_at' : key;
+              query = query.eq(dbKey, queryCriteria[key]);
             }
-            const { data, error } = await query.order('created_at', { ascending: false });
-            if (error) throw error;
-            return (data || []).map(i => ({ ...i, created_date: i.created_at }));
+            const { data: inqs, error: inqError } = await query.order('created_at', { ascending: false });
+            if (inqError) throw inqError;
+            
+            const { data: props, error: propError } = await supabase.from('properties').select('id, title');
+            const propMap = {};
+            if (!propError && props) {
+              props.forEach(p => { propMap[p.id] = p.title; });
+            }
+            
+            return (inqs || []).map(i => ({
+              ...i,
+              created_date: i.created_at,
+              property_title: propMap[i.property_id] || null
+            }));
           },
           get: async (id) => {
-            const { data, error } = await supabase.from('inquiries').select('*').eq('id', id).maybeSingle();
-            if (error) throw error;
-            if (!data) return null;
-            return { ...data, created_date: data.created_at };
+            const { data: inq, error: inqError } = await supabase.from('inquiries').select('*').eq('id', id).maybeSingle();
+            if (inqError) throw inqError;
+            if (!inq) return null;
+            
+            let property_title = null;
+            if (inq.property_id) {
+              const { data: prop } = await supabase.from('properties').select('title').eq('id', inq.property_id).maybeSingle();
+              if (prop) property_title = prop.title;
+            }
+            
+            return {
+              ...inq,
+              created_date: inq.created_at,
+              property_title
+            };
           },
           create: async (data) => {
-            const { data: created, error } = await supabase.from('inquiries').insert([data]).select().single();
+            const insertData = {
+              name: data.name,
+              email: data.email,
+              phone: data.phone,
+              message: data.message,
+              property_id: data.property_id || null
+            };
+            const { data: created, error } = await supabase.from('inquiries').insert([insertData]).select().single();
             if (error) throw error;
-            return { ...created, created_date: created.created_at };
+            
+            let property_title = null;
+            if (created.property_id) {
+              const { data: prop } = await supabase.from('properties').select('title').eq('id', created.property_id).maybeSingle();
+              if (prop) property_title = prop.title;
+            }
+            
+            return {
+              ...created,
+              created_date: created.created_at,
+              property_title
+            };
           },
           update: async (id, data) => {
-            const { data: updated, error } = await supabase.from('inquiries').update(data).eq('id', id).select().single();
+            const updateData = {
+              name: data.name,
+              email: data.email,
+              phone: data.phone,
+              message: data.message,
+              property_id: data.property_id || null
+            };
+            const { data: updated, error } = await supabase.from('inquiries').update(updateData).eq('id', id).select().single();
             if (error) throw error;
-            return { ...updated, created_date: updated.created_at };
+            
+            let property_title = null;
+            if (updated.property_id) {
+              const { data: prop } = await supabase.from('properties').select('title').eq('id', updated.property_id).maybeSingle();
+              if (prop) property_title = prop.title;
+            }
+            
+            return {
+              ...updated,
+              created_date: updated.created_at,
+              property_title
+            };
           },
           delete: async (id) => {
             const { error } = await supabase.from('inquiries').delete().eq('id', id);
@@ -615,15 +692,44 @@ if (!globalThis.__BHOODEVI_DB__) {
           },
         },
         Inquiry: {
-          list: async () => INQUIRIES,
-          filter: async (criteria) => filterData(INQUIRIES, criteria),
-          get: async (id) => INQUIRIES.find(i => i.id === id) || null,
+          list: async () => {
+            const propMap = {};
+            PROPERTIES.forEach(p => {
+              propMap[p.id] = p.title;
+            });
+            return INQUIRIES.map(i => ({
+              ...i,
+              property_title: i.property_title || propMap[i.property_id] || null
+            }));
+          },
+          filter: async (criteria) => {
+            const propMap = {};
+            PROPERTIES.forEach(p => {
+              propMap[p.id] = p.title;
+            });
+            const mapped = INQUIRIES.map(i => ({
+              ...i,
+              property_title: i.property_title || propMap[i.property_id] || null
+            }));
+            return filterData(mapped, criteria);
+          },
+          get: async (id) => {
+            const inq = INQUIRIES.find(i => i.id === id);
+            if (!inq) return null;
+            const prop = PROPERTIES.find(p => p.id === inq.property_id);
+            return {
+              ...inq,
+              property_title: inq.property_title || (prop ? prop.title : null)
+            };
+          },
           create: async (data) => {
             const newInq = {
               id: "inquiry-" + Date.now(),
               created_date: new Date().toISOString(),
               ...data
             };
+            const prop = PROPERTIES.find(p => p.id === data.property_id);
+            newInq.property_title = prop ? prop.title : null;
             INQUIRIES.unshift(newInq);
             setStorageItem(STORAGE_KEYS.INQUIRIES, INQUIRIES);
             return newInq;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, ArrowUp, MessageCircle } from "lucide-react";
+import { ArrowUp, MessageCircle } from "lucide-react";
 import { SITE } from "@/lib/site";
 import { useLocation } from "react-router-dom";
 
@@ -17,7 +17,7 @@ export default function FloatingActions() {
   // Build a context-aware WhatsApp message
   const isPropertyPage = location.pathname.startsWith("/properties/");
   const whatsappMessage = isPropertyPage
-    ? `Hello Bhoodevi Properties,\n\nI am interested in a property I found on your website.\n\n🔗 ${window.location.href}\n\nPlease share more details and help me schedule a site visit.`
+    ? `Hello Bhoodevi Properties,\n\nI am interested in a property I found on your website.\n\n🔗 ${window.location.href}\n\nPlease share more details and help me book a call appointment.`
     : `Hello Bhoodevi Properties,\n\nI'd like to know more about your available land estates in Hyderabad. Please get in touch.`;
 
   return (
@@ -37,13 +37,7 @@ export default function FloatingActions() {
         )}
       </AnimatePresence>
 
-      <a
-        href={`tel:${SITE.phoneRaw}`}
-        className="grid place-items-center w-12 h-12 rounded-full bg-secondary text-secondary-foreground shadow-lg hover:scale-105 transition-transform"
-        aria-label="Call now"
-      >
-        <Phone className="w-5 h-5" />
-      </a>
+
 
       <a
         href={`https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`}

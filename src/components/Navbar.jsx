@@ -73,12 +73,7 @@ export default function Navbar() {
             >
               <Phone className="w-4 h-4" />
             </a>
-            <Link
-              to="/properties"
-              className="hidden sm:inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-300 shadow-sm hover:shadow-md"
-            >
-              Schedule Site Visit
-            </Link>
+
             <button
               onClick={() => setOpen(true)}
               className="lg:hidden grid place-items-center w-10 h-10 rounded-full border border-border"
@@ -131,9 +126,7 @@ export default function Navbar() {
                 ))}
               </div>
               <div className="mt-auto space-y-3">
-                <Link to="/properties" className="block rounded-full bg-primary text-primary-foreground text-center py-3.5 font-semibold">
-                  Schedule Site Visit
-                </Link>
+
                 <a href={`tel:${SITE.phoneRaw}`} className="flex items-center justify-center gap-2 rounded-full border border-border py-3.5 font-medium">
                   <Phone className="w-4 h-4" /> {SITE.phone}
                 </a>
