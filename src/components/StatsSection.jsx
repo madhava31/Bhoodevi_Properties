@@ -12,7 +12,7 @@ export default function StatsSection() {
           <SectionTitle
             eyebrow="By the Numbers"
             title={<>The measure of <span className="text-accent">trust</span></>}
-            subtitle="Fourteen years of verified transactions, documented acreage, and escorted site visits."
+            subtitle="Fourteen years of verified transactions, documented acreage, and dedicated customer consultations."
             light
           />
         </div>

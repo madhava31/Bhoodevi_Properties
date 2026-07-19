@@ -195,8 +195,8 @@ const SEEDED_FAQS = [
   },
   {
     id: "faq-3",
-    question: "Can we schedule a site visit?",
-    answer: "Yes, we arrange scheduled site visits with a concierge vehicle and an on-site surveyor to explain boundary coordinates and soil conditions.",
+    question: "Can we schedule a call appointment?",
+    answer: "Yes, we arrange scheduled call appointments to review property details, title deeds, and map locations with our project heads.",
     order: 3
   }
 ];
