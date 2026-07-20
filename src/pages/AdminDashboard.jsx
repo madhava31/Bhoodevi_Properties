@@ -2,7 +2,7 @@ const db = globalThis.__BHOODEVI_DB__ || { auth:{ isAuthenticated: async()=>fals
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, MapPin, Building, Activity, FileText, CheckCircle2, MessageSquare, ExternalLink, ShieldCheck, LogOut, Clock3, CircleX } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Building, Activity, FileText, CheckCircle2, MessageSquare, ExternalLink, ShieldCheck, LogOut, Clock3, CircleX, X, Save } from "lucide-react";
 import { formatPrice } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { clearAdminSession } from "@/pages/AdminLogin";
@@ -25,6 +25,8 @@ export default function AdminDashboard() {
   const [properties, setProperties] = useState([]);
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingInquiry, setEditingInquiry] = useState(null);
+  const [inquirySaving, setInquirySaving] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,6 +56,42 @@ export default function AdminDashboard() {
       } catch (err) {
         alert("Failed to delete property. Please try again.");
       }
+    }
+  };
+
+  const handleDeleteInquiry = async (id, name) => {
+    if (window.confirm(`Are you sure you want to delete the inquiry from "${name || "this client"}"?`)) {
+      try {
+        await db.entities.Inquiry.delete(id);
+        setInquiries((prev) => prev.filter((i) => i.id !== id));
+      } catch (err) {
+        alert("Failed to delete inquiry. Please try again.");
+      }
+    }
+  };
+
+  const handleSaveInquiry = async (e) => {
+    e.preventDefault();
+    if (!editingInquiry) return;
+    setInquirySaving(true);
+    try {
+      const updatePayload = {
+        name: editingInquiry.name,
+        phone: editingInquiry.phone,
+        email: editingInquiry.email || "",
+        message: editingInquiry.message || "",
+        property_title: editingInquiry.property_title || "General Inquiry"
+      };
+      await db.entities.Inquiry.update(editingInquiry.id, updatePayload);
+      setInquiries((prev) =>
+        prev.map((i) => (i.id === editingInquiry.id ? { ...i, ...updatePayload } : i))
+      );
+      setEditingInquiry(null);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update inquiry. Please try again.");
+    } finally {
+      setInquirySaving(false);
     }
   };
 
@@ -272,12 +310,28 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   inquiries.map((inq) => (
-                    <div key={inq.id} className="py-4 first:pt-0 last:pb-0">
+                    <div key={inq.id} className="py-4 first:pt-0 last:pb-0 group">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="font-semibold text-foreground">{inq.name}</div>
-                        <span className="text-[10px] text-muted-foreground">
-                          {inq.phone}
-                        </span>
+                        <div>
+                          <div className="font-semibold text-foreground">{inq.name}</div>
+                          <div className="text-[10px] text-muted-foreground">{inq.phone}</div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setEditingInquiry({ ...inq })}
+                            className="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-md transition-all"
+                            title="Edit Inquiry"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteInquiry(inq.id, inq.name)}
+                            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all"
+                            title="Delete Inquiry"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                       <div className="text-xs text-accent font-medium mt-1">
                         Ref: {inq.property_title || "General Inquiry"}
@@ -300,6 +354,110 @@ export default function AdminDashboard() {
         </div>
 
       </div>
+
+      {/* Edit Inquiry Modal */}
+      {editingInquiry && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-lg shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-5">
+              <h3 className="font-display text-2xl text-foreground">Edit Client Inquiry</h3>
+              <button
+                onClick={() => setEditingInquiry(null)}
+                className="p-1 text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveInquiry} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  Client Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingInquiry.name || ""}
+                  onChange={(e) => setEditingInquiry({ ...editingInquiry, name: e.target.value })}
+                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm outline-none focus:border-accent"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingInquiry.phone || ""}
+                    onChange={(e) => setEditingInquiry({ ...editingInquiry, phone: e.target.value })}
+                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm outline-none focus:border-accent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={editingInquiry.email || ""}
+                    onChange={(e) => setEditingInquiry({ ...editingInquiry, email: e.target.value })}
+                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm outline-none focus:border-accent"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  Property Reference
+                </label>
+                <input
+                  type="text"
+                  value={editingInquiry.property_title || ""}
+                  onChange={(e) => setEditingInquiry({ ...editingInquiry, property_title: e.target.value })}
+                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm outline-none focus:border-accent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  Message / Notes
+                </label>
+                <textarea
+                  rows={4}
+                  value={editingInquiry.message || ""}
+                  onChange={(e) => setEditingInquiry({ ...editingInquiry, message: e.target.value })}
+                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm outline-none focus:border-accent"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setEditingInquiry(null)}
+                  className="rounded-full border border-border px-5 py-2 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={inquirySaving}
+                  className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-6 py-2 text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {inquirySaving ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

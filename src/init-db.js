@@ -734,8 +734,24 @@ if (!globalThis.__BHOODEVI_DB__) {
             setStorageItem(STORAGE_KEYS.INQUIRIES, INQUIRIES);
             return newInq;
           },
-          update: async (id, data) => data,
-          delete: async (id) => ({}),
+          update: async (id, data) => {
+            INQUIRIES = INQUIRIES.map(i => {
+              if (i.id === id) {
+                const prop = PROPERTIES.find(p => p.id === (data.property_id || i.property_id));
+                const propTitle = data.property_title || (prop ? prop.title : i.property_title);
+                return { ...i, ...data, property_title: propTitle };
+              }
+              return i;
+            });
+            setStorageItem(STORAGE_KEYS.INQUIRIES, INQUIRIES);
+            const updated = INQUIRIES.find(i => i.id === id);
+            return updated || data;
+          },
+          delete: async (id) => {
+            INQUIRIES = INQUIRIES.filter(i => i.id !== id);
+            setStorageItem(STORAGE_KEYS.INQUIRIES, INQUIRIES);
+            return {};
+          },
         }
       },
       integrations: {
