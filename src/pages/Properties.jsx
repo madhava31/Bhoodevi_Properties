@@ -37,11 +37,15 @@ export default function Properties() {
       if (type && p.type !== type) return false;
       if (query) {
         const q = query.toLowerCase();
-        if (!(`${p.title} ${p.location} ${p.short_description || ""}`.toLowerCase().includes(q))) return false;
+        const searchStr = `${p.title || ""} ${p.location || ""} ${p.short_description || ""} ${p.description || ""}`.toLowerCase();
+        if (!searchStr.includes(q)) return false;
       }
-      if (maxPrice && p.price > Number(maxPrice)) return false;
+      if (maxPrice) {
+        const numericPrice = typeof p.price === "number" ? p.price : Number(String(p.price || 0).replace(/[^0-9.]/g, ""));
+        if (numericPrice > Number(maxPrice)) return false;
+      }
       if (orr) {
-        const d = p.orr_distance_km ?? 999;
+        const d = Number(p.orr_distance_km ?? 999);
         const [lo, hi] = orr === "50+" ? [50, Infinity] : orr.split("-").map(Number);
         if (d < lo || d > hi) return false;
       }
@@ -50,8 +54,10 @@ export default function Properties() {
     return [...r].sort((a, b) => {
       const statusDifference = (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3);
       if (statusDifference !== 0) return statusDifference;
-      if (sort === "price-asc") return a.price - b.price;
-      if (sort === "price-desc") return b.price - a.price;
+      const numA = typeof a.price === "number" ? a.price : Number(String(a.price || 0).replace(/[^0-9.]/g, ""));
+      const numB = typeof b.price === "number" ? b.price : Number(String(b.price || 0).replace(/[^0-9.]/g, ""));
+      if (sort === "price-asc") return numA - numB;
+      if (sort === "price-desc") return numB - numA;
       return new Date(b.created_date || 0) - new Date(a.created_date || 0);
     });
   }, [all, type, query, maxPrice, orr, sort]);
@@ -85,7 +91,7 @@ export default function Properties() {
       </section>
 
       {/* Toolbar */}
-      <section className="sticky top-[68px] z-40 glass border-b border-border">
+      <section className="sticky top-[68px] z-40 glass border-b border-border !overflow-visible">
         <div className="mx-auto max-w-8xl px-5 md:px-10 py-3 flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -112,10 +118,12 @@ export default function Properties() {
         <AnimatePresence>
           {filtersOpen && (
             <motion.div
-              initial={{ height: 0, opacity: 0, overflow: "hidden" }}
-              animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }}
-              exit={{ height: 0, opacity: 0, overflow: "hidden" }}
-              className="border-t border-border"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="border-t border-border !overflow-visible"
+              style={{ overflow: "visible" }}
             >
               <div className="mx-auto max-w-8xl px-5 md:px-10 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <FilterField label="Property Type">

@@ -19,7 +19,7 @@ export default function FilterSelect({ value, onChange, options, placeholder = "
   const label = selected ? selected.label : placeholder;
 
   return (
-    <div className="relative" ref={ref}>
+    <div className={`relative ${open ? "z-50" : "z-10"}`} ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
